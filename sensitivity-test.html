@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Housing Development Sensitivity Test Calculator</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-light: #eff6ff;
+      --accent-green: #22c55e;
+      --accent-yellow: #fef08a;
+      --accent-blue: #bfdbfe;
+      --accent-red: #fca5a5;
+      --bg-gray: #f8fafc;
+      --border-color: #cbd5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      background-color: var(--bg-gray);
+      color: #1e293b;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 28px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-top: -6px;
+      margin-bottom: 20px;
+    }
+
+    /* Action Buttons */
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+      align-items: center;
+    }
+
+    button {
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-scenario {
+      background-color: #f1f5f9;
+      color: #1e293b;
+      border-color: #cbd5e1;
+    }
+
+    .btn-scenario:hover {
+      background-color: #e2e8f0;
+    }
+
+    .btn-scenario.active {
+      background-color: #1e3a8a;
+      color: #ffffff;
+      border-color: #1e3a8a;
+      box-shadow: 0 2px 8px rgba(30, 58, 138, 0.25);
+    }
+
+    .btn-custom {
+      background-color: #0d9488;
+      color: white;
+    }
+
+    .btn-custom:hover {
+      background-color: #0f766e;
+    }
+
+    /* KPI Summary Cards */
+    .kpi-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      border-left: 5px solid #3b82f6;
+    }
+
+    .kpi-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 2px;
+    }
+
+    /* Table Styles */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-bottom: 24px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: right;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      border: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    td.text-left { text-align: left; }
+    td.text-center { text-align: center; }
+
+    /* Category backgrounds */
+    .bg-dev-area { background-color: #fef08a !important; }
+    .bg-blue-cell { background-color: #bfdbfe !important; }
+    .bg-red-cell { background-color: #fca5a5 !important; }
+    .bg-population { background-color: #86efac !important; font-weight: 600; }
+    .row-total { background-color: #f8fafc; font-weight: 700; }
+    .row-grand { background-color: #f1f5f9; font-weight: 800; }
+
+    /* Interactive Inputs */
+    input.tbl-input {
+      width: 80px;
+      text-align: right;
+      padding: 4px 6px;
+      font-size: 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      background: transparent;
+    }
+
+    input.tbl-input:focus {
+      outline: 2px solid #2563eb;
+      background: #ffffff;
+    }
+
+    /* Note and Remark References */
+    .sup-ref {
+      color: #b91c1c;
+      font-weight: 700;
+      font-size: 0.8rem;
+      margin-left: 2px;
+      cursor: help;
+    }
+
+    /* Remarks Box */
+    .remarks-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid #2563eb;
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 16px;
+    }
+
+    .remarks-card h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .remarks-list {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 0.88rem;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    .remarks-list li {
+      margin-bottom: 6px;
+    }
+
+    .notes {
+      font-size: 0.82rem;
+      color: #64748b;
+      line-height: 1.5;
+      padding-top: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Housing Development Sensitivity Test Calculator</h1>
+  <div class="subtitle">Evaluate Population, Flat Counts, Domestic & Non-domestic GFA across baseline and sensitivity cases</div>
+
+  <!-- Scenario Selector Buttons -->
+  <div class="btn-group">
+    <button class="btn-scenario active" id="btn-case1" onclick="applyScenario(1)">
+      Case 1: Base Case (~38,500 | +10% Flat Size)
+    </button>
+    <button class="btn-scenario" id="btn-case2" onclick="applyScenario(2)">
+      Case 2: Scenario 2 (~42,200 | Baseline Flat Size)
+    </button>
+    <button class="btn-scenario" id="btn-case3" onclick="applyScenario(3)">
+      Case 3: Scenario 3 (~35,400 | +20% Flat Size)
+    </button>
+    <button class="btn-custom" onclick="calculateAll()">
+      🔄 Calculate / Update Custom Values
+    </button>
+  </div>
+
+  <!-- Key Metrics Dashboard -->
+  <div class="kpi-container">
+    <div class="kpi-card" style="border-left-color: #22c55e;">
+      <div class="kpi-title">Total Population</div>
+      <div class="kpi-value" id="kpi-pop">38,461</div>
+      <div class="kpi-sub">Overall Planned Capacity</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: #3b82f6;">
+      <div class="kpi-title">Total No. of Flats</div>
+      <div class="kpi-value" id="kpi-flats">14,245</div>
+      <div class="kpi-sub" id="kpi-split">Public: 5.8% | Private: 94.2%</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: #eab308;">
+      <div class="kpi-title">Total Domestic GFA</div>
+      <div class="kpi-value" id="kpi-dom-gfa">1,112,750 m²</div>
+      <div class="kpi-sub">Private + Public Sites</div>
+    </div>
+    <div class="kpi-card" style="border-left-color: #64748b;">
+      <div class="kpi-title">Total Non-Domestic GFA</div>
+      <div class="kpi-value" id="kpi-nondom-gfa">134,360 m²</div>
+      <div class="kpi-sub">Commercial & Retail GFA</div>
+    </div>
+  </div>
+
+  <!-- Sensitivity Test Spreadsheet Table -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 140px;">Type / Site</th>
+          <th>Site Code</th>
+          <th class="bg-dev-area">Development Area (m²)</th>
+          <th>Domestic PR</th>
+          <th>Non-domestic PR</th>
+          <th>Flat Size (m²)</th>
+          <th>Persons / Flat</th>
+          <th>Site Red. Factor</th>
+          <th>Domestic GFA (m²)</th>
+          <th>Non-domestic GFA (m²)</th>
+          <th class="bg-population">Population</th>
+          <th>No. of Flats</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- PRIVATE SECTOR -->
+        <tr>
+          <td rowspan="5" class="text-left" style="font-weight: 600; background: #fff7ed;">Private</td>
+          <td class="text-left">OU(RDCRD).1</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="86500" id="area-ou"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-ou"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="ndpr-ou"></td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-ou"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-ou"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-ou"></td>
+          <td id="dgfa-ou">0</td>
+          <td id="ndgfa-ou">0</td>
+          <td class="bg-population" id="pop-ou">0</td>
+          <td id="flats-ou">0</td>
+        </tr>
+        <tr>
+          <td class="text-left">R.1</td>
+          <td class="bg-blue-cell"><input type="number" class="tbl-input dev-area" value="16000" id="area-r1"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-r1"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="0.5" id="ndpr-r1"></td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-r1"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-r1"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-r1"></td>
+          <td id="dgfa-r1">0</td>
+          <td id="ndgfa-r1">0</td>
+          <td class="bg-population" id="pop-r1">0</td>
+          <td id="flats-r1">0</td>
+        </tr>
+        <tr>
+          <td class="text-left">R.2</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="38700" id="area-r2"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-r2"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="0.5" id="ndpr-r2"></td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-r2"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-r2"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-r2"></td>
+          <td id="dgfa-r2">0</td>
+          <td id="ndgfa-r2">0</td>
+          <td class="bg-population" id="pop-r2">0</td>
+          <td id="flats-r2">0</td>
+        </tr>
+        <tr>
+          <td class="text-left">R.3</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="19500" id="area-r3"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-r3"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="0.5" id="ndpr-r3"></td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-r3"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-r3"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-r3"></td>
+          <td id="dgfa-r3">0</td>
+          <td id="ndgfa-r3">0</td>
+          <td class="bg-population" id="pop-r3">0</td>
+          <td id="flats-r3">0</td>
+        </tr>
+        <tr>
+          <td class="text-left">R.4</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="17500" id="area-r4"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-r4"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="0.5" id="ndpr-r4"></td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-r4"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-r4"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-r4"></td>
+          <td id="dgfa-r4">0</td>
+          <td id="ndgfa-r4">0</td>
+          <td class="bg-population" id="pop-r4">0</td>
+          <td id="flats-r4">0</td>
+        </tr>
+        <!-- PRIVATE TOTAL -->
+        <tr class="row-total">
+          <td colspan="2" class="text-left">Private Total</td>
+          <td class="bg-dev-area" id="tot-area-priv">178,200</td>
+          <td colspan="5"></td>
+          <td id="tot-dgfa-priv">1,069,200</td>
+          <td id="tot-ndgfa-priv">132,350</td>
+          <td class="bg-population" id="tot-pop-priv">34,992</td>
+          <td id="tot-flats-priv">12,960</td>
+        </tr>
+
+        <!-- PUBLIC SECTOR -->
+        <tr>
+          <td rowspan="1" class="text-left" style="font-weight: 600; background: #f0fdf4;">
+            Public (DRE Site) <span class="sup-ref" title="Dedicated Rehousing Estate">[Ref 1,2]</span>
+          </td>
+          <td class="text-left">RSc.1</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="6700" id="area-rsc"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6.5" id="dpr-rsc"></td>
+          <td class="bg-red-cell">
+            <input type="number" step="0.1" class="tbl-input" value="0.3" id="ndpr-rsc">
+            <span class="sup-ref" title="PlanD advice (retail only, no SWF)">*</span>
+          </td>
+          <td>
+            <input type="number" step="0.5" class="tbl-input" value="55" id="fs-rsc">
+            <span class="sup-ref" title="CEDD 4 Feb 2025 email">*</span>
+          </td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-rsc"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="1" id="red-rsc"></td>
+          <td id="dgfa-rsc">0</td>
+          <td id="ndgfa-rsc">0</td>
+          <td class="bg-population" id="pop-rsc">0</td>
+          <td id="flats-rsc">0</td>
+        </tr>
+        <tr class="row-total">
+          <td colspan="2" class="text-left">Public Total</td>
+          <td class="bg-dev-area" id="tot-area-pub">6,700</td>
+          <td colspan="5"></td>
+          <td id="tot-dgfa-pub">43,550</td>
+          <td id="tot-ndgfa-pub">2,010</td>
+          <td class="bg-population" id="tot-pop-pub">2,138</td>
+          <td id="tot-flats-pub">792</td>
+        </tr>
+
+        <!-- OVERALL (Private + Public) -->
+        <tr class="row-grand">
+          <td colspan="2" class="text-left">Overall (Private + Public)</td>
+          <td id="tot-area-overall">184,900</td>
+          <td colspan="5"></td>
+          <td id="tot-dgfa-overall">1,112,750</td>
+          <td id="tot-ndgfa-overall">134,360</td>
+          <td class="bg-population" id="tot-pop-overall">37,130</td>
+          <td id="tot-flats-overall">13,752</td>
+        </tr>
+
+        <!-- STAFF QUARTERS -->
+        <tr>
+          <td colspan="2" class="text-left">Staff Quarter ("H" Grade)</td>
+          <td class="bg-dev-area"><input type="number" class="tbl-input dev-area" value="10400" id="area-sq-h"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="6" id="dpr-sq-h"></td>
+          <td>-</td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-sq-h"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-sq-h"></td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="bg-population"><input type="number" class="tbl-input" style="font-weight:700" value="1331" id="pop-sq-h"></td>
+          <td><input type="number" class="tbl-input" value="493" id="flats-sq-h"></td>
+        </tr>
+        <tr>
+          <td colspan="2" class="text-left">Staff Quarter ("G" Grade)</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td><input type="number" step="0.5" class="tbl-input" value="82.5" id="fs-sq-g"></td>
+          <td><input type="number" step="0.1" class="tbl-input" value="2.7" id="ppf-sq-g"></td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="bg-population"><input type="number" class="tbl-input" style="font-weight:700" value="0" id="pop-sq-g"></td>
+          <td><input type="number" class="tbl-input" value="0" id="flats-sq-g"></td>
+        </tr>
+
+        <!-- FINAL GRAND TOTAL -->
+        <tr class="row-grand" style="font-size: 1rem; background-color: #e2e8f0;">
+          <td colspan="2" class="text-left">GRAND TOTAL</td>
+          <td colspan="8" class="text-center" style="letter-spacing: 1px; color:#475569;">INCL. REHOUSING (DRE) & STAFF QUARTERS</td>
+          <td class="bg-population" id="grand-pop">38,461</td>
+          <td id="grand-flats">14,245</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Planning Remarks & Assumptions Box -->
+  <div class="remarks-card">
+    <h3>📌 Planning Remarks & Basis of Assumptions</h3>
+    <ol class="remarks-list">
+      <li><strong>CEDD Reference:</strong> As per CEDD's email dated <strong>4 Feb 2025</strong>, the average flat size in the Dedicated Rehousing Estate (DRE) is <strong>55 m²</strong> (adopted in the Base Case).</li>
+      <li><strong>PlanD Advice:</strong> PlanD advised on <strong>26 May 2025</strong> to provide 2 towers in the DRE site accommodating <strong>~800 units</strong>, assuming a Non-Domestic Plot Ratio (NDPR) of <strong>0.3 only</strong> for the DRE site as it is assumed no Social Welfare Facilities (SWF) are accommodated.</li>
+      <li><strong>Public Housing Plot Ratio Breakdown:</strong> For public housing developments with a total non-domestic plot ratio of <strong>0.625</strong>, a non-domestic plot ratio of <strong>0.3</strong> is adopted for retail, while GFA equivalent to a plot ratio of <strong>0.325</strong> is adopted for the provision of social welfare facilities (which is exempted from GFA calculation).</li>
+    </ol>
+  </div>
+
+  <div class="notes">
+    <strong>Calculation Formulation:</strong><br>
+    • $\text{Domestic GFA } (\text{m}^2) = \text{Development Area } \times \text{Domestic PR} \times \text{Site Reduction Factor}$<br>
+    • $\text{Non-domestic GFA } (\text{m}^2) = \text{Development Area } \times \text{Non-domestic PR}$<br>
+    • $\text{No. of Flats} = \text{ROUND}(\text{Domestic GFA} / \text{Flat Size})$<br>
+    • $\text{Population} = \text{ROUND}((\text{Domestic GFA} / \text{Flat Size}) \times \text{Persons per Flat})$
+  </div>
+</div>
+
+<script>
+  // Scenario Data Presets
+  const scenarios = {
+    1: {
+      name: "Case 1: Base Case of about 38,500 (+10% flat size)",
+      privFlatSize: 82.5,
+      pubFlatSize: 55,   // Remark 1: CEDD 4 Feb 2025
+      sqFlatSize: 82.5,
+      dprPub: 6.5,
+      ndprPub: 0.3      // Remark 2 & 3: PlanD 26 May 2025 (Retail only, no SWF)
+    },
+    2: {
+      name: "Case 2: Scenario Case 2 of about 42,200 (no increase in flat size)",
+      privFlatSize: 75,
+      pubFlatSize: 50,
+      sqFlatSize: 82.5,
+      dprPub: 6.5,
+      ndprPub: 0.3
+    },
+    3: {
+      name: "Case 3: Scenario Case 3 of about 35,400 (+20% flat size)",
+      privFlatSize: 90,
+      pubFlatSize: 60,
+      sqFlatSize: 90,
+      dprPub: 6.5,
+      ndprPub: 0.3
+    }
+  };
+
+  const privSites = ['ou', 'r1', 'r2', 'r3', 'r4'];
+
+  function applyScenario(scenarioNumber) {
+    document.querySelectorAll('.btn-scenario').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`btn-case${scenarioNumber}`).classList.add('active');
+
+    const sc = scenarios[scenarioNumber];
+
+    // Set Private flat sizes
+    privSites.forEach(s => {
+      document.getElementById(`fs-${s}`).value = sc.privFlatSize;
+      document.getElementById(`ppf-${s}`).value = 2.7;
+      document.getElementById(`red-${s}`).value = 1;
+    });
+
+    // Set Public flat size & PR
+    document.getElementById('fs-rsc').value = sc.pubFlatSize;
+    document.getElementById('dpr-rsc').value = sc.dprPub;
+    document.getElementById('ndpr-rsc').value = sc.ndprPub;
+    document.getElementById('ppf-rsc').value = 2.7;
+
+    // Staff Quarters
+    document.getElementById('fs-sq-h').value = sc.sqFlatSize;
+    document.getElementById('fs-sq-g').value = sc.sqFlatSize;
+
+    // Batch calculate
+    calculateAll();
+  }
+
+  function calculateRow(siteId) {
+    const area = parseFloat(document.getElementById(`area-${siteId}`).value) || 0;
+    const dpr = parseFloat(document.getElementById(`dpr-${siteId}`).value) || 0;
+    const ndpr = parseFloat(document.getElementById(`ndpr-${siteId}`).value) || 0;
+    const fs = parseFloat(document.getElementById(`fs-${siteId}`).value) || 1;
+    const ppf = parseFloat(document.getElementById(`ppf-${siteId}`).value) || 0;
+    const red = parseFloat(document.getElementById(`red-${siteId}`).value) || 1;
+
+    const dgfa = area * dpr * red;
+    const ndgfa = area * ndpr;
+    const flats = Math.round(dgfa / fs);
+    const pop = Math.round((dgfa / fs) * ppf);
+
+    document.getElementById(`dgfa-${siteId}`).innerText = dgfa.toLocaleString();
+    document.getElementById(`ndgfa-${siteId}`).innerText = ndgfa.toLocaleString();
+    document.getElementById(`flats-${siteId}`).innerText = flats.toLocaleString();
+    document.getElementById(`pop-${siteId}`).innerText = pop.toLocaleString();
+
+    return { area, dgfa, ndgfa, flats, pop };
+  }
+
+  function calculateAll() {
+    let privArea = 0, privDgfa = 0, privNdgfa = 0, privFlats = 0, privPop = 0;
+
+    // Private Sites
+    privSites.forEach(s => {
+      const res = calculateRow(s);
+      privArea += res.area;
+      privDgfa += res.dgfa;
+      privNdgfa += res.ndgfa;
+      privFlats += res.flats;
+      privPop += res.pop;
+    });
+
+    const fsOu = parseFloat(document.getElementById('fs-ou').value) || 82.5;
+    const ppfOu = parseFloat(document.getElementById('ppf-ou').value) || 2.7;
+    const exactPrivPop = Math.round((privDgfa / fsOu) * ppfOu);
+
+    document.getElementById('tot-area-priv').innerText = privArea.toLocaleString();
+    document.getElementById('tot-dgfa-priv').innerText = privDgfa.toLocaleString();
+    document.getElementById('tot-ndgfa-priv').innerText = privNdgfa.toLocaleString();
+    document.getElementById('tot-flats-priv').innerText = privFlats.toLocaleString();
+    document.getElementById('tot-pop-priv').innerText = exactPrivPop.toLocaleString();
+
+    // Public Site (DRE RSc.1)
+    const pub = calculateRow('rsc');
+    document.getElementById('tot-area-pub').innerText = pub.area.toLocaleString();
+    document.getElementById('tot-dgfa-pub').innerText = pub.dgfa.toLocaleString();
+    document.getElementById('tot-ndgfa-pub').innerText = pub.ndgfa.toLocaleString();
+    document.getElementById('tot-flats-pub').innerText = pub.flats.toLocaleString();
+    document.getElementById('tot-pop-pub').innerText = pub.pop.toLocaleString();
+
+    // Overall Housing (Private + Public)
+    const overallArea = privArea + pub.area;
+    const overallDgfa = privDgfa + pub.dgfa;
+    const overallNdgfa = privNdgfa + pub.ndgfa;
+    const overallFlats = privFlats + pub.flats;
+    const overallPop = exactPrivPop + pub.pop;
+
+    document.getElementById('tot-area-overall').innerText = overallArea.toLocaleString();
+    document.getElementById('tot-dgfa-overall').innerText = overallDgfa.toLocaleString();
+    document.getElementById('tot-ndgfa-overall').innerText = overallNdgfa.toLocaleString();
+    document.getElementById('tot-flats-overall').innerText = overallFlats.toLocaleString();
+    document.getElementById('tot-pop-overall').innerText = overallPop.toLocaleString();
+
+    // Staff Quarters
+    const sqPopH = parseFloat(document.getElementById('pop-sq-h').value) || 0;
+    const sqFlatsH = parseFloat(document.getElementById('flats-sq-h').value) || 0;
+    const sqPopG = parseFloat(document.getElementById('pop-sq-g').value) || 0;
+    const sqFlatsG = parseFloat(document.getElementById('flats-sq-g').value) || 0;
+
+    // Grand Totals
+    const grandPop = overallPop + sqPopH + sqPopG;
+    const grandFlats = overallFlats + sqFlatsH + sqFlatsG;
+
+    document.getElementById('grand-pop').innerText = grandPop.toLocaleString();
+    document.getElementById('grand-flats').innerText = grandFlats.toLocaleString();
+
+    // Update KPI dashboard
+    document.getElementById('kpi-pop').innerText = grandPop.toLocaleString();
+    document.getElementById('kpi-flats').innerText = grandFlats.toLocaleString();
+    document.getElementById('kpi-dom-gfa').innerText = overallDgfa.toLocaleString() + ' m²';
+    document.getElementById('kpi-nondom-gfa').innerText = overallNdgfa.toLocaleString() + ' m²';
+
+    const pubPct = ((pub.flats / overallFlats) * 100).toFixed(1);
+    const privPct = ((privFlats / overallFlats) * 100).toFixed(1);
+    document.getElementById('kpi-split').innerText = `Public: ${pubPct}% | Private: ${privPct}%`;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    applyScenario(1);
+  });
+</script>
+</body>
+</html>
